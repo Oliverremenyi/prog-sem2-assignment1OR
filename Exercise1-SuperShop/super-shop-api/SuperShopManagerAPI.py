@@ -10,7 +10,7 @@ superShopApp = Flask(__name__)
 # need to extend this class for custom objects, so that they can be jsonified
 superShopApp.json_encoder = ShopJsonEncoder
 superShopAPI = Api(superShopApp, version='1.0', title='SuperShopManager',
-                   contact_email = "ADD YOUR IMC EMAIL HERE",
+                   contact_email="ADD YOUR IMC EMAIL HERE",
                    description='Shop Management API')
 
 # Add all the parts of the API here

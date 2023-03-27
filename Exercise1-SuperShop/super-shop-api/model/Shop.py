@@ -26,3 +26,11 @@ class Shop:
         for c in self.customers:
             if c.email == email:
                 return c
+
+    def getProduct(self, prod_id):
+        for product in self.products:
+            if product.product_id == prod_id:
+                return product
+
+    def removeProduct(self, product):
+        self.products.remove(product)

@@ -55,10 +55,21 @@ class SpecificCustomerOps(Resource):
         description="Update customer data",
         params={'address': 'Customers address',
                 'name': 'Customers name',
-                'email': 'Customer Email',
+                # 'email': 'Customer Email',
                 'dob': 'Customer birthday'})
     def put(self, customer_id):
-        pass
+        args = request.args
+        address = args['address']
+        name = args['name']
+        # email = args['email']
+        dob = args['dob']
+        custumer = my_shop.getCustomer(customer_id)
+        if custumer is None:
+            return jsonify("Customer not found")
+        custumer.set_name(name)
+        custumer.set_address(address)
+        custumer.set_dob(dob)
+        return jsonify("Custumer data is updated")
 
 
 @CustomerAPI.route('/verify')

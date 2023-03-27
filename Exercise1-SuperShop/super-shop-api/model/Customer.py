@@ -17,3 +17,21 @@ class Customer:
             self.status = "verified"
             self.verification_token = None
         return self.status == "verified"
+
+    def set_name(self, newName):
+        self.name = newName
+
+    def get_name(self):
+        return self.name
+
+    def set_address(self, newAddress):
+        self.address = newAddress
+
+    def get_address(self):
+        return self.address
+
+    def set_dob(self, newDob):
+        self.dob = newDob
+
+    def get_dob(self):
+        return self.dob

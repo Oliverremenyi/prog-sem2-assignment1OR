@@ -8,7 +8,7 @@ class Shop:
 
     def addCustomer(self, c):
         c1 = self.getCustomerbyEmail(c.email)
-        if c1 == None:  # customer does not exist with the given email address
+        if c1 is None:  # customer does not exist with the given email address
             self.customers.append(c)
             return True
         else:

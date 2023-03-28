@@ -11,6 +11,7 @@ class Customer:
         self.status = "unverified"
         self.verification_token = str(uuid.uuid4())[:5]
         self.dob = dob
+        self.purchase_history = {}
 
     def verify(self, token):
         if self.verification_token == token:
@@ -35,3 +36,6 @@ class Customer:
 
     def get_dob(self):
         return self.dob
+
+    def buy(self, product, quantity):
+        self.purchase_history.update({product: quantity})

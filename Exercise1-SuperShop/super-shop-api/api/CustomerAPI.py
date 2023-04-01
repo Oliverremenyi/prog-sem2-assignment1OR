@@ -47,9 +47,9 @@ class SpecificCustomerOps(Resource):
     def delete(self, customer_id):
         c = my_shop.getCustomer(customer_id)
         if not c:
-            return jsonify("Customer ID {cust_id} was not found")
+            return jsonify(f"Customer ID {customer_id} was not found")
         my_shop.removeCustomer(c)
-        return jsonify("Customer with ID {cust_id} was removed")
+        return jsonify(f"Customer with ID {customer_id} was removed")
 
     @CustomerAPI.doc(
         description="Update customer data",
@@ -96,11 +96,23 @@ class CustomerPWReset(Resource):
     @CustomerAPI.doc(
         description="Generate a temporary password and send via email.", )
     def post(self, customer_id):
-        pass
+        customer = my_shop.getCustomer(customer_id)
+        if not customer:
+            return jsonify("Customer not found")
+        temp = customer.generate_temp_password()
+        return jsonify(f"A temporary password is created: {temp}")
 
     @CustomerAPI.doc(
         description="Allow password reset based on the temporary password",
         params={'temp_pw': 'Password sent by email',
                 'new_pw': 'New password'})
     def put(self, customer_id):
-        pass
+        args = request.args
+        temp_pw = args['temp_pw']
+        new_pw = args['new_pw']
+        customer = my_shop.getCustomer(customer_id)
+        if not customer:
+            return jsonify("Customer not found")
+        if temp_pw == customer.get_temp_passw():
+            customer.pwreset(new_pw)
+            return jsonify("Password is updated")

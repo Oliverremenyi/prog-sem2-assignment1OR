@@ -116,3 +116,24 @@ class CustomerPWReset(Resource):
         if temp_pw == customer.get_temp_passw():
             customer.pwreset(new_pw)
             return jsonify("Password is updated")
+
+
+@CustomerAPI.route('/<customer_id>/add2cart ')
+class CustomerAdd2Cart(Resource):
+    @CustomerAPI.doc(
+        description="Add products to the cart",
+        params={'prod_id': 'Product ID',
+                'quantity': 'Quantity'})
+    def put(self, customer_id):
+        args = request.args
+        prod_id = args['prod_id']
+        quantity = args['quantity']
+        customer = my_shop.getCustomer(customer_id)
+        product = my_shop.getProduct(prod_id)
+        if not customer:
+            return jsonify(f"Customer with ID {customer_id} not found")
+        if not product:
+            return jsonify("Product not found")
+        name = product.getName()
+        customer.add2cart(name, quantity)
+        return jsonify('Product added to the cart')

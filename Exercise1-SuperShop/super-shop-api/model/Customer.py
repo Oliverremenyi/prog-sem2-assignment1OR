@@ -13,8 +13,27 @@ class Customer:
         self.verification_token = str(uuid.uuid4())[:5]
         self.dob = dob
         self.purchase_history = {}
-        self.password = ""
-        self.temp_pass = ""
+        self.password = None
+        self.temp_pass = None
+        self.shopping_cart = {}
+
+    def set_name(self, newName):
+        self.name = newName
+
+    def get_name(self):
+        return self.name
+
+    def set_address(self, newAddress):
+        self.address = newAddress
+
+    def get_address(self):
+        return self.address
+
+    def set_dob(self, newDob):
+        self.dob = newDob
+
+    def get_dob(self):
+        return self.dob
 
     def verify(self, token):
         if self.verification_token == token:
@@ -52,23 +71,8 @@ class Customer:
     def pwreset(self, new_password):
         self.password = new_password
 
-    def set_name(self, newName):
-        self.name = newName
-
-    def get_name(self):
-        return self.name
-
-    def set_address(self, newAddress):
-        self.address = newAddress
-
-    def get_address(self):
-        return self.address
-
-    def set_dob(self, newDob):
-        self.dob = newDob
-
-    def get_dob(self):
-        return self.dob
-
     def buy(self, product, quantity):
         self.purchase_history.update({product: quantity})
+
+    def add2cart(self, product, quantity):
+        self.shopping_cart.update({product: quantity})

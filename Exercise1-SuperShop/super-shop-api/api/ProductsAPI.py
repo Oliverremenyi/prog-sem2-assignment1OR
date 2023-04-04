@@ -8,14 +8,18 @@ from model.data import my_shop
 ProductAPI = Namespace('product',
                        description='Product Management')
 
+ProductsAPI = Namespace('products',
+                        description='All the products')
+
 
 @ProductAPI.route('/')
 class AddProductA(Resource):
     @ProductAPI.doc(description='Add a new product',
                     params={'name': 'Product name',
-                            'expiry': 'expiry date',
-                            'category': 'product category',
-                            'serial_num': 'serial_num'})
+                            'expiry': 'Expiry date',
+                            'category': 'Product category',
+                            'serial_num': 'Serial_num',
+                            'price': 'Price'})
     def post(self):
         # get the post parameters
         args = request.args
@@ -23,13 +27,26 @@ class AddProductA(Resource):
         expiry = args['expiry']
         category = args['category']
         serial_num = args['serial_num']
+        price = args['price']
+        is_float = False
+        try:
+            float(price)
+            is_float = True
+        except ValueError:
+            is_float = False
+        if is_float is True:
+            price = float(price)
+            new_product = Product(name, expiry, category, serial_num, price)
+            # add the product
+            my_shop.addProduct(new_product)
+            return jsonify(new_product)
+        else:
+            return jsonify('Invalid price')
 
-        new_product = Product(name, expiry, category, serial_num)
-        # add the product
-        my_shop.addProduct(new_product)
-        return jsonify(new_product)
 
-    @ProductAPI.doc(description="Get a list of all the products")
+@ProductsAPI.route('/')
+class GetProducts(Resource):
+    @ProductsAPI.doc(description="Get a list of all the products")
     def get(self):
         return jsonify(my_shop.products)
 
@@ -59,13 +76,11 @@ class SpecificProductOps(Resource):
         product = my_shop.getProduct(product_id)
         if not product:
             return jsonify("Product not found")
-        product.changeStock(int(quantity))
-        return jsonify("Stock is updated")
-        # if quantity == int(quantity):
-        #     product.changeStock(int(quantity))
-        #     return jsonify("Stock is updated")
-        # else:
-        #     return jsonify("Quantity should be a number")
+        if quantity.isnumeric() is True:
+            product.changeStock(int(quantity))
+            return jsonify("Stock is updated")
+        else:
+            return jsonify("Quantity should be a number")
 
 
 @ProductAPI.route('/sell')
@@ -78,7 +93,7 @@ class ProductSell(Resource):
     def put(self):
         args = request.args
         cust_id = args['cust_id']
-        quantity = args['quantity']
+        quant = args['quantity']
         prod_id = args['prod_id']
         customer = my_shop.getCustomer(cust_id)
         product = my_shop.getProduct(prod_id)
@@ -86,9 +101,30 @@ class ProductSell(Resource):
             return jsonify("Customer not found")
         if not product:
             return jsonify("Product not found")
-        if int(quantity) > product.getQuantity():
-            return jsonify("There is not enough products in the store")
-        product.sell(int(quantity))
-        name = product.getName()
-        customer.buy(name, quantity)
-        return jsonify("The purchase has been made")
+        if quant.isnumeric() is True:
+            quantity = int(quant)
+            if int(quantity) > product.getQuantity():
+                return jsonify("There is not enough products in the store")
+            product.sell(int(quantity))
+            name = product.getName()
+            customer.buy(name, quantity)
+            return jsonify("The purchase has been made")
+        else:
+            return jsonify("Quantity is not a number")
+
+
+@ProductAPI.route('/remove')
+class ProductRemove(Resource):
+    @ProductAPI.doc(
+        decription="Remove a product",
+        params={'reason': 'Reason for removal',
+                'prod_id': 'Product ID'})
+    def put(self):
+        args = request.args
+        reason = args['reason']
+        prod_id = args['prod_id']
+        product = my_shop.getProduct(prod_id)
+        if not product:
+            return jsonify("Product not found")
+        product.setQuantity(0)
+        return jsonify(f"Product was removed, because {reason}")

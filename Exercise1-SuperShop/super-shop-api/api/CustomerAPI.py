@@ -55,21 +55,19 @@ class SpecificCustomerOps(Resource):
         description="Update customer data",
         params={'address': 'Customers address',
                 'name': 'Customers name',
-                # 'email': 'Customer Email',
                 'dob': 'Customer birthday'})
     def put(self, customer_id):
         args = request.args
         address = args['address']
         name = args['name']
-        # email = args['email']
         dob = args['dob']
-        custumer = my_shop.getCustomer(customer_id)
-        if custumer is None:
+        customer = my_shop.getCustomer(customer_id)
+        if customer is None:
             return jsonify("Customer not found")
-        custumer.set_name(name)
-        custumer.set_address(address)
-        custumer.set_dob(dob)
-        return jsonify("Custumer data is updated")
+        customer.set_name(name)
+        customer.set_address(address)
+        customer.set_dob(dob)
+        return jsonify("Customer data is updated")
 
 
 @CustomerAPI.route('/verify')
@@ -99,7 +97,8 @@ class CustomerPWReset(Resource):
         customer = my_shop.getCustomer(customer_id)
         if not customer:
             return jsonify("Customer not found")
-        temp = customer.generate_temp_password()
+        customer.generate_temp_password()
+        temp = customer.get_temp_passw()
         return jsonify(f"A temporary password is created: {temp}")
 
     @CustomerAPI.doc(
@@ -115,10 +114,11 @@ class CustomerPWReset(Resource):
             return jsonify("Customer not found")
         if temp_pw == customer.get_temp_passw():
             customer.pwreset(new_pw)
+            customer.set_temp_pass()
             return jsonify("Password is updated")
 
 
-@CustomerAPI.route('/<customer_id>/add2cart ')
+@CustomerAPI.route('/<customer_id>/add2cart')
 class CustomerAdd2Cart(Resource):
     @CustomerAPI.doc(
         description="Add products to the cart",
@@ -135,5 +135,74 @@ class CustomerAdd2Cart(Resource):
         if not product:
             return jsonify("Product not found")
         name = product.getName()
-        customer.add2cart(name, quantity)
-        return jsonify('Product added to the cart')
+        if quantity == "-1":
+            customer.del_from_cart(product)
+            return jsonify("Product removed from the cart")
+        if quantity.isnumeric() is True:
+            quanti = int(quantity)
+            if quanti == 0:
+                return jsonify(f"Cannot add {quanti} amount of {name} to the cart")
+            elif quanti < -1:
+                return jsonify(f"Cannot add {quanti} amount of {name} to the cart")
+            else:
+                customer.add2cart(name, quanti)
+                return jsonify('Product added to the cart')
+        else:
+            return jsonify('Quantity is not a number')
+
+
+# @CustomerAPI.route('/<customer_id>/order')
+# class CustomerOrder(Resource):
+    # @CustomerAPI.doc(
+    #     description="",
+    #     params={'shipping_address': 'Shipping Address',
+    #             'card_num': 'Credit Card Number'})
+    # def put(self, cust_id):
+    #     args = request.args
+    #     shipping_address = args['shipping_address']
+    #     card_num = args['card_num']
+    #     customer = my_shop.getCustomer(cust_id)
+    #     if not customer:
+    #         return jsonify("Customer not found")
+    #     customer.make_order()
+    #     return jsonify("Order has been made")
+
+@CustomerAPI.route('/<customer_id>/order')
+class CustomerPoints(Resource):
+    @CustomerAPI.doc(description="Make an order",
+                     params={'shipping_address': 'Shipping Address',
+                             'card_num': 'Card number'})
+    def post(self, customer_id):
+        args = request.args
+        shipping_address = args['shipping_address']
+        card_num = args['card_num']
+        customer = my_shop.getCustomer(customer_id)
+        if not customer:
+            return jsonify("Customer not found")
+        customer.make_order()
+        return jsonify("Order has been made")
+
+
+@CustomerAPI.route('/<customer_id>/points')
+class CustomerPoints(Resource):
+    @CustomerAPI.doc(description="Earned bonus points")
+    def get(self, customer_id):
+        customer = my_shop.getCustomer(customer_id)
+        if not customer:
+            return jsonify("Customer not found")
+        points = customer.get_points()
+        return jsonify(points)
+
+    @CustomerAPI.doc(description="Add bonus points",
+                     params={"points": 'points'})
+    def put(self, customer_id):
+        args = request.args
+        points = args["points"]
+        customer = my_shop.getCustomer(customer_id)
+        if not customer:
+            return jsonify("Customer not found")
+        if points.isnumeric():
+            customer.addPoints(int(points))
+            return jsonify("Points have been added")
+        else:
+            return jsonify("Points have to be integers")

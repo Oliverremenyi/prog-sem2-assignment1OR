@@ -1,5 +1,4 @@
 import uuid
-import random
 
 
 class Customer:
@@ -16,21 +15,26 @@ class Customer:
         self.password = None
         self.temp_pass = None
         self.shopping_cart = {}
-
-    def set_name(self, newName):
-        self.name = newName
+    def set_name(self, new_name):
+        self.name = new_name
 
     def get_name(self):
         return self.name
 
-    def set_address(self, newAddress):
-        self.address = newAddress
+    def get_points(self):
+        return self.bonus_points
+
+    def addPoints(self, points):
+        self.bonus_points += points
+
+    def set_address(self, new_address):
+        self.address = new_address
 
     def get_address(self):
         return self.address
 
-    def set_dob(self, newDob):
-        self.dob = newDob
+    def set_dob(self, new_dob):
+        self.dob = new_dob
 
     def get_dob(self):
         return self.dob
@@ -42,28 +46,12 @@ class Customer:
         return self.status == "verified"
 
     def generate_temp_password(self):
-        upper = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                 'U', 'V', 'W', 'X', 'Y', 'Z']
-        lower_case = []
-        nums = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-        special = ['!', '?', '@', '&', '#', '*']
-        temp = ""
-        for i in upper:
-            lower_case.append(i.lower())
-        rand_upper = [random.choice(upper) for i in range(3)]
-        rand_lower = [random.choice(lower_case) for k in range(3)]
-        rand_special = [random.choice(special) for k in range(3)]
-        rand_num = [random.choice(nums) for k in range(3)]
-        for i in rand_upper:
-            temp += i
-        for i in rand_lower:
-            temp += i
-        for i in rand_special:
-            temp += i
-        for i in rand_num:
-            temp += i
+        temp = str(uuid.uuid4())[:5]
         self.temp_pass = temp
         return temp
+
+    def set_temp_pass(self):
+        self.temp_pass = None
 
     def get_temp_passw(self):
         return self.temp_pass
@@ -75,4 +63,29 @@ class Customer:
         self.purchase_history.update({product: quantity})
 
     def add2cart(self, product, quantity):
-        self.shopping_cart.update({product: quantity})
+        # quantity = int(quan)
+        in_cart = False
+        for i in self.shopping_cart.keys():
+            if i == product:
+                product_quantity = self.shopping_cart[i]
+                self.shopping_cart.update({product: product_quantity + quantity})
+                in_cart = True
+        if not in_cart:
+            self.shopping_cart.update({product: quantity})
+
+    def del_from_cart(self, product):
+        in_cart = False
+        for i in self.shopping_cart.keys():
+            if i == product:
+                in_cart = True
+        if in_cart is True:
+            del self.shopping_cart[product]
+
+    def make_order(self):
+        sum = 0
+        for product, quantity in self.shopping_cart.items():
+            for prod in my_shop.products:
+                if prod.getName() == product:
+                    sum += prod.getPrice() * quantity
+        bonus_points = round(sum / 10, 2)
+        self.bonus_points += bonus_points

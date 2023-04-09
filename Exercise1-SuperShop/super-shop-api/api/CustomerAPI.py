@@ -3,6 +3,7 @@ from flask_restx import Resource, Namespace
 
 from model.Customer import Customer
 from model.data import my_shop
+from model.Product import Product
 
 CustomerAPI = Namespace('customer',
                         description='Customer Management')
@@ -120,10 +121,9 @@ class CustomerPWReset(Resource):
 
 @CustomerAPI.route('/<customer_id>/add2cart')
 class CustomerAdd2Cart(Resource):
-    @CustomerAPI.doc(
-        description="Add products to the cart",
-        params={'prod_id': 'Product ID',
-                'quantity': 'Quantity'})
+    @CustomerAPI.doc(description="Add products to the cart",
+                     params={'prod_id': 'Product ID',
+                             'quantity': 'Quantity'})
     def put(self, customer_id):
         args = request.args
         prod_id = args['prod_id']
@@ -136,13 +136,14 @@ class CustomerAdd2Cart(Resource):
             return jsonify("Product not found")
         name = product.getName()
         if quantity == "-1":
-            customer.del_from_cart(product)
+            customer.del_from_cart(name)
             return jsonify("Product removed from the cart")
-        if quantity.isnumeric() is True:
+        if quantity.isnumeric():
             quanti = int(quantity)
+            if quanti > product.getQuantity():
+                available_quantity = product.getQuantity()
+                return jsonify(f"There is not enough product in the shop. Available: {available_quantity}")
             if quanti == 0:
-                return jsonify(f"Cannot add {quanti} amount of {name} to the cart")
-            elif quanti < -1:
                 return jsonify(f"Cannot add {quanti} amount of {name} to the cart")
             else:
                 customer.add2cart(name, quanti)
@@ -151,24 +152,8 @@ class CustomerAdd2Cart(Resource):
             return jsonify('Quantity is not a number')
 
 
-# @CustomerAPI.route('/<customer_id>/order')
-# class CustomerOrder(Resource):
-    # @CustomerAPI.doc(
-    #     description="",
-    #     params={'shipping_address': 'Shipping Address',
-    #             'card_num': 'Credit Card Number'})
-    # def put(self, cust_id):
-    #     args = request.args
-    #     shipping_address = args['shipping_address']
-    #     card_num = args['card_num']
-    #     customer = my_shop.getCustomer(cust_id)
-    #     if not customer:
-    #         return jsonify("Customer not found")
-    #     customer.make_order()
-    #     return jsonify("Order has been made")
-
 @CustomerAPI.route('/<customer_id>/order')
-class CustomerPoints(Resource):
+class CustomerOrder(Resource):
     @CustomerAPI.doc(description="Make an order",
                      params={'shipping_address': 'Shipping Address',
                              'card_num': 'Card number'})
@@ -179,8 +164,60 @@ class CustomerPoints(Resource):
         customer = my_shop.getCustomer(customer_id)
         if not customer:
             return jsonify("Customer not found")
-        customer.make_order()
-        return jsonify("Order has been made")
+        if card_num.isnumeric() and len(card_num) == 16:
+            if customer.get_shopping_cart() == {}:
+                return jsonify("The shopping cart is empty, add products to the cart first")
+            else:
+                cart = customer.get_shopping_cart()
+                total_price = 0
+                products = my_shop.getProducts()
+                for product, quantity in cart.items():
+                    for prod in products:
+                        if prod.getName() == product:
+                            price = prod.getPrice()
+                            total_price += price * quantity
+                            customer.buy(product, quantity)
+                            order_date = customer.current_date()
+                            delivery_date = customer.delivery_date(order_date)
+                            customer.order(product, order_date, delivery_date)
+                            prod.sell(quantity)
+                points = round(total_price, 0)
+                if points - total_price > 0:
+                    points -= 1
+                pay_with_points = total_price - (customer.get_points()) * 0.1
+                customer.addPoints(points)
+                customer.setShoppingCart({})
+                return jsonify(f"The total is {total_price}. With your bonus points it is {pay_with_points}")
+
+        else:
+            return jsonify('Invalid Credit Card Number')
+
+
+@CustomerAPI.route('/<customer_id>/orders')
+class CustomerOrders(Resource):
+    @CustomerAPI.doc(description="All the orders made by a customer")
+    def get(self, customer_id):
+        customer = my_shop.getCustomer(customer_id)
+        if not customer:
+            return jsonify("Customer not found")
+        orders = customer.get_order()
+        if not orders:
+            return jsonify("There are no orders made by this customer")
+        return jsonify(orders)
+
+
+@CustomerAPI.route('/<customer_id>/returnable')
+class CustomerReturn(Resource):
+    @CustomerAPI.doc(description="Returnable products")
+    def get(self, customer_id):
+        customer = my_shop.getCustomer(customer_id)
+        if not customer:
+            return jsonify("Customer not found")
+        returnable = customer.ifReturnable()
+        if len(returnable) == 0:
+            return jsonify("There is no returnable product")
+        else:
+            return jsonify(f"The returnable products: {returnable}")
 
 
 @CustomerAPI.route('/<customer_id>/points')
@@ -206,3 +243,32 @@ class CustomerPoints(Resource):
             return jsonify("Points have been added")
         else:
             return jsonify("Points have to be integers")
+
+
+@CustomerAPI.route('/<customer_id>/recommendations')
+class CustomerRecommendations(Resource):
+    @CustomerAPI.doc(description="Recommended items")
+    def get(self, customer_id):
+        customer = my_shop.getCustomer(customer_id)
+        if not customer:
+            return jsonify("Customer not found")
+        purch_hist = customer.get_purchase_history()
+        products = my_shop.getProducts()
+        category = ""
+        recommended = []
+        for i in purch_hist:
+            for k in products:
+                if k.getName() == i:
+                    category = k.get_category()
+                    break
+            for j in products:
+                cat = j.get_category()
+                name = j.getName()
+                if cat == category:
+                    recommended.append(name)
+        output = []
+        for i in recommended:
+            if len(output) <= 10:
+                if i not in output:
+                    output.append(i)
+        return jsonify(output)

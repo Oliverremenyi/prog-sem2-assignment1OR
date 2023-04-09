@@ -1,4 +1,6 @@
 import uuid
+import datetime
+from datetime import date
 
 
 class Customer:
@@ -15,6 +17,11 @@ class Customer:
         self.password = None
         self.temp_pass = None
         self.shopping_cart = {}
+        self.orders = []
+
+    def get_purchase_history(self):
+        return self.purchase_history
+
     def set_name(self, new_name):
         self.name = new_name
 
@@ -60,7 +67,13 @@ class Customer:
         self.password = new_password
 
     def buy(self, product, quantity):
-        self.purchase_history.update({product: quantity})
+        in_history = False
+        for key in self.purchase_history.keys():
+            if key == product:
+                self.purchase_history[key] += quantity
+                in_history = True
+        if not in_history:
+            self.purchase_history.update({product: quantity})
 
     def add2cart(self, product, quantity):
         # quantity = int(quan)
@@ -74,18 +87,38 @@ class Customer:
             self.shopping_cart.update({product: quantity})
 
     def del_from_cart(self, product):
-        in_cart = False
         for i in self.shopping_cart.keys():
             if i == product:
-                in_cart = True
-        if in_cart is True:
-            del self.shopping_cart[product]
+                del self.shopping_cart[product]
 
-    def make_order(self):
-        sum = 0
-        for product, quantity in self.shopping_cart.items():
-            for prod in my_shop.products:
-                if prod.getName() == product:
-                    sum += prod.getPrice() * quantity
-        bonus_points = round(sum / 10, 2)
-        self.bonus_points += bonus_points
+    def get_shopping_cart(self):
+        return self.shopping_cart
+
+    def setShoppingCart(self, cart):
+        self.shopping_cart = cart
+
+    def order(self, product, order_date, delivery_date):
+        lst = [product, order_date, delivery_date]
+        self.orders.append(lst)
+
+    def get_order(self):
+        return self.orders
+
+    def current_date(self):
+        return date.today()
+
+    def delivery_date(self, order_date):
+        delivery_time = datetime.timedelta(days=5)
+        delivery_date = order_date + delivery_time
+        return delivery_date
+
+    def ifReturnable(self):
+        lst = []
+        for i in self.orders:
+            order_date = i[1]
+            two_week = datetime.timedelta(days=14)
+            returnable = order_date + two_week
+            today = date.today()
+            if order_date <= today <= returnable:
+                lst.append(i[0])
+        return lst

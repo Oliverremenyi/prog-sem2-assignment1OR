@@ -2,9 +2,13 @@ class Shop:
     def __init__(self):
         self.customers = []
         self.products = []
+        self.coupons = []
 
     def addProduct(self, p):
         self.products.append(p)
+
+    def getProducts(self):
+        return self.products
 
     def addCustomer(self, c):
         c1 = self.getCustomerbyEmail(c.email)
@@ -34,3 +38,16 @@ class Shop:
 
     def removeProduct(self, product):
         self.products.remove(product)
+
+    def addCoupon(self, coupon):
+        c1 = self.getCouponByNumber(coupon.num)
+        if c1 is None:  # customer does not exist with the given email address
+            self.coupons.append(coupon)
+            return True
+        else:
+            return False
+
+    def getCouponByNumber(self, number):
+        for c in self.coupons:
+            if c.num == number:
+                return c

@@ -4,6 +4,7 @@ from flask_restx import Api
 from api.CustomerAPI import CustomerAPI
 from api.ProductsAPI import ProductAPI
 from api.ProductsAPI import ProductsAPI
+from api.CouponApi import CouponApi
 from util.json_utils import ShopJsonEncoder
 
 superShopApp = Flask(__name__)
@@ -18,6 +19,7 @@ superShopAPI = Api(superShopApp, version='1.0', title='SuperShopManager',
 superShopAPI.add_namespace(CustomerAPI)
 superShopAPI.add_namespace(ProductAPI)
 superShopAPI.add_namespace(ProductsAPI)
+superShopAPI.add_namespace(CouponApi)
 
 if __name__ == '__main__':
     superShopApp.run(debug=True, port=7890)

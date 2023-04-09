@@ -128,3 +128,17 @@ class ProductRemove(Resource):
             return jsonify("Product not found")
         product.setQuantity(0)
         return jsonify(f"Product was removed, because {reason}")
+
+
+@ProductAPI.route('/reorder')
+class ProductsReorder(Resource):
+    @ProductAPI.doc(description="All the items that should be reordered")
+    def get(self):
+        items = []
+        for i in my_shop.getProducts():
+            name = i.getName()
+            items.append(name)
+        # for cust in my_shop.customers:
+            # for order in cust.get_order():
+
+

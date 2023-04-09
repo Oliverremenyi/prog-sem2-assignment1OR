@@ -11,6 +11,9 @@ class Product:
         self.quantity = 1
         self.price = price
 
+    def get_category(self):
+        return self.category
+
     def __repr__(self):
         return self.name
 

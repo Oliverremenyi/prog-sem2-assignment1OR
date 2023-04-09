@@ -4,6 +4,7 @@ from flask_restx import Resource, Namespace
 from model.Customer import Customer
 from model.Product import Product
 from model.data import my_shop
+import datetime
 
 ProductAPI = Namespace('product',
                        description='Product Management')
@@ -108,6 +109,9 @@ class ProductSell(Resource):
             product.sell(int(quantity))
             name = product.getName()
             customer.buy(name, quantity)
+            order_date = customer.current_date()
+            delivery_date = customer.delivery_date(order_date)
+            customer.order(name, quantity, order_date, delivery_date)
             return jsonify("The purchase has been made")
         else:
             return jsonify("Quantity is not a number")
@@ -135,10 +139,23 @@ class ProductsReorder(Resource):
     @ProductAPI.doc(description="All the items that should be reordered")
     def get(self):
         items = []
+        sold = {}
+        reorder = []
         for i in my_shop.getProducts():
             name = i.getName()
             items.append(name)
-        # for cust in my_shop.customers:
-            # for order in cust.get_order():
-
-
+            sold.update({name: 0})
+        for item in items:
+            for customer in my_shop.customers:
+                for order in customer.orders:
+                    if order[0] == item:
+                        week = datetime.timedelta(days=7)
+                        last_week = order[2] - week
+                        if last_week <= order[2]:
+                            all_quantity = order[1] + sold[item]
+                            sold.update({item: all_quantity})
+        for i in my_shop.products:
+            name = i.getName()
+            if i.quantity < sold[name]:
+                reorder.append(name)
+        return jsonify(reorder)

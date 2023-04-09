@@ -87,9 +87,13 @@ class Customer:
             self.shopping_cart.update({product: quantity})
 
     def del_from_cart(self, product):
-        for i in self.shopping_cart.keys():
-            if i == product:
-                del self.shopping_cart[product]
+        new_dict = {}
+        for prod, quantity in self.shopping_cart.items():
+            if prod == product:
+                continue
+            else:
+                new_dict.update({prod: quantity})
+        self.shopping_cart = new_dict
 
     def get_shopping_cart(self):
         return self.shopping_cart
@@ -97,8 +101,8 @@ class Customer:
     def setShoppingCart(self, cart):
         self.shopping_cart = cart
 
-    def order(self, product, order_date, delivery_date):
-        lst = [product, order_date, delivery_date]
+    def order(self, product, quantity, order_date, delivery_date):
+        lst = [product, quantity, order_date, delivery_date]
         self.orders.append(lst)
 
     def get_order(self):

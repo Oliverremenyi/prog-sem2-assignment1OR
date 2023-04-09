@@ -1,4 +1,5 @@
 import uuid
+import datetime
 
 
 class Product:
@@ -37,9 +38,3 @@ class Product:
 
     def getQuantity(self):
         return self.quantity
-
-    def remove(self):
-        pass
-
-    def reorder(self):
-        pass

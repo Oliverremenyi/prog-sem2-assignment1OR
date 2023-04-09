@@ -179,7 +179,7 @@ class CustomerOrder(Resource):
                             customer.buy(product, quantity)
                             order_date = customer.current_date()
                             delivery_date = customer.delivery_date(order_date)
-                            customer.order(product, order_date, delivery_date)
+                            customer.order(product, quantity, order_date, delivery_date)
                             prod.sell(quantity)
                 points = round(total_price, 0)
                 if points - total_price > 0:
